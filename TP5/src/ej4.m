@@ -10,8 +10,8 @@ function ej4 ;clc;close all;
     t = 0:dt:Tp; % Vector de tiempo [s]
     tg = 0:dt:5*Tp; % Vector de tiempo extendido [s]
 
-    Pt = carga(t,Tp); % Carga externa [N]
-    Ptg = carga(tg,Tp); % Carga externa extendida [N]
+    Pt = carga(t,Tp,Po); % Carga externa [N]
+    Ptg = carga(tg,Tp,Po); % Carga externa extendida [N]
 
     % Mostramos la carga externa orginal en el tiempo
     figure;
@@ -101,11 +101,11 @@ function ej4 ;clc;close all;
 
 end
 
-function Pt =carga(t,tp) % Calculo de la carga externa en el tiempo
+function Pt =carga(t,tp,Po) % Calculo de la carga externa en el tiempo
     Pt = zeros(1,length(t));
     for i = 1:length(t)
         t_mod = mod(t(i),tp);
-        Pt(i) = (t_mod>=0 && t_mod<tp/2).*(4/tp*t_mod-1) + (t_mod>=tp/2 && t_mod<tp).*(1-4/tp*(t_mod-tp/2));
+        Pt(i) = (t_mod>=0 && t_mod<tp/2).*(4/tp*t_mod-Po) + (t_mod>=tp/2 && t_mod<tp).*(Po-4/tp*(t_mod-tp/2));
     end
 
 end
