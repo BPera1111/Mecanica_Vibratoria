@@ -15,3 +15,4 @@ y(x == 22) = 3 - x(x == 22);
 % Graficamos la función
 plot(x,y)
 
+
