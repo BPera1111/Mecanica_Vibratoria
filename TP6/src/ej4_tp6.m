@@ -4,13 +4,13 @@ function ej4_tp6;clc;close all;
     k = 8; % Rigidez [kips/in]
     c = 0.4; % Amortiguamiento [kips.sec/in]
     wn = sqrt(k/m); % Frecuencia natural [rad/s]
-    zitta = c/(2*sqrt(m*k)); % Coeficiente de amortiguamiento
-    wd = wn*sqrt(1-zitta^2); % Frecuencia de amortiguamiento [rad/s]
+    % zitta = c/(2*sqrt(m*k)); % Coeficiente de amortiguamiento
+    % wd = wn*sqrt(1-zitta^2); % Frecuencia de amortiguamiento [rad/s]
     T = 2*pi/wn; % Periodo [s]
 
     dt = 0.006; % Paso de tiempo [s]
-    tf = 5; % Tiempo final [s]
-    t = 0:dt:6; % Vector de tiempo [s]
+    tf = 6; % Tiempo final [s]
+    t = 0:dt:tf; % Vector de tiempo [s]
 
     % Parametros de la carga externa
     P = carga(t); % Carga externa en el tiempo

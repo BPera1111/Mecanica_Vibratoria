@@ -4,8 +4,8 @@ function ej3_tp6;clc;close all;
     k = 5; % Rigidez [kips/in]
     c = 0.2; % Amortiguamiento [kips.sec/in]
     wn = sqrt(k/m); % Frecuencia natural [rad/s]
-    zitta = c/(2*sqrt(m*k)); % Coeficiente de amortiguamiento
-    wd = wn*sqrt(1-zitta^2); % Frecuencia de amortiguamiento [rad/s]
+    % zitta = c/(2*sqrt(m*k)); % Coeficiente de amortiguamiento
+    % wd = wn*sqrt(1-zitta^2); % Frecuencia de amortiguamiento [rad/s]
 
     dt = 0.1; % Paso de tiempo [s]
     tf = 8; % Tiempo final [s]
@@ -14,7 +14,7 @@ function ej3_tp6;clc;close all;
     % Parametros de la carga externa
     P = carga(t); % Carga externa en el tiempo
 
-    [x,dx,ddx] = Newmark_Beta(wn,t,dt,P,m,c,k); % Calculo la respuesta en el tiempo con el metodo de Newmark Beta
+    [x,dx] = Newmark_Beta(wn,t,dt,P,m,c,k); % Calculo la respuesta en el tiempo con el metodo de Newmark Beta
 
     % Fuerza del resorte
     Fk = (-k)*x;
