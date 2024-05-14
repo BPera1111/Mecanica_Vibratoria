@@ -1,4 +1,4 @@
-function ej4; clc; close all; clear all;
+function ej4_tp3; clc; close all; clear all;
 
     m = 1361;
     k = 2.688E5;

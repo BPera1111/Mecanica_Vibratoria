@@ -1,4 +1,4 @@
-function ej4 ;clc;close all;
+function ej4_tp5 ;clc;close all;
     
     % Parametros de la carga externa
 

@@ -1,4 +1,4 @@
-function ej3; clc;close all;
+function ej3_tp5; clc;close all;
     % Parametros del sistema con un grado de libertad
     m = 1; % Masa [kg]
     k = 1; % Rigidez [N/m]

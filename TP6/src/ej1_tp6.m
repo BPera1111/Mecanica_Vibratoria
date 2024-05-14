@@ -1,4 +1,4 @@
-function ej1 ;clc;close all;
+function ej1_tp6 ;clc;close all;
 
     % Parametros del sistema con un grado de libertad
     m = 0.2; % Masa [kips.sec^2/in]
@@ -16,7 +16,7 @@ function ej1 ;clc;close all;
     P = carga(t); % Carga externa en el tiempo
 
     % Calculo de la integral de Duhamel
-    xt = Duhamel(t,dt,P,wd,zitta,m);
+    xt = Duhamel(t,dt,P,wd,zitta,m,k);
 
     % Calculo de la respuesta en el tiempo
     % xt = A.*sin(wd*t) - B.*cos(wd*t);
@@ -55,12 +55,13 @@ function ej1 ;clc;close all;
 
 end
 
-function P=carga(t)
-    P = zeros(1,length(t));
-    P(2)=1; P(3)=4; P(4)=9; P(5)=9; P(6)=6;
+function P=carga(t) % Carga externa en el tiempo
+    t_app = 0:0.12:0.72;
+    P_app = [0,1,4,9,9,6,0];
+    P = interp1(t_app,P_app,t,"linear",0);
 end
 
-function xt=Duhamel(t,dt,P,wd,zitta,m)
+function xt=Duhamel(t,dt,P,wd,zitta,m,k) % Integral de Duhamel para sistemas subamortiguados
     e=exp(1)^(-zitta*wd*dt);
     A = zeros(1,length(t));
     B = zeros(1,length(t));
@@ -73,4 +74,12 @@ function xt=Duhamel(t,dt,P,wd,zitta,m)
         end
     end
     xt = A.*sin(wd*t) - B.*cos(wd*t);
+
+    %fuerza del resorte
+    Fk = (-k)*xt;
+
+    % tabla con las primeras 10 filas de P, yc, ys, A , B , xt y Fk
+    n = 0:1:10;
+    T = table(n(1:10)',P(1:10)',yc(1:10)',ys(1:10)',A(1:10)',B(1:10)',xt(1:10)',Fk(1:10)','VariableNames',{'n','Pn','yc(t)','ys(t)','A(t)','B(t)','x(t)','Fk(t)'});
+    disp(T); 
 end

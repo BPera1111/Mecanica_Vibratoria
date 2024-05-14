@@ -1,4 +1,4 @@
-function ej11 ;clc; close all;
+function ej11_tp4 ;clc; close all;
 
     tf=0.1;
     zeta = 0.01;
