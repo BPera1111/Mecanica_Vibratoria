@@ -6,8 +6,7 @@ function main;clc;close all; g = false; % graph flag
     m1=26067; %% Masa 1
     m2=129209; %% Masa 2 
     
-    z=0.015;
-    zitta = [z z z z]; % relacion de amortiguamiento
+    z=0.015; zitta = [z z z z]; % relacion de amortiguamiento
     x0 = [ 0 ; 0 ; 0 ; 0 ]; % desplazamiento inicial [m]
     dx0 = [ 0; 0 ; 0 ; 0 ]; % velocidad inicial [m/s]
     
@@ -24,8 +23,8 @@ function main;clc;close all; g = false; % graph flag
         -k2 0   k2 0;
          0 -k2  0 k2]; %% Matriz de Rigidez
     
-    dt = 0.001; % time step
-    t=0:dt:10; % time vector
+    dt = 0.005; % time step
+    t=0:dt:50; % time vector
     
     %% ENCUENTRO AUTOVECTORES Y AUTOVALORES
     [V,lambda]=eig(K,M); %el X que me larga ya esta normalizado de modo q X'*m*X=I
@@ -34,15 +33,9 @@ function main;clc;close all; g = false; % graph flag
     wd=wn.*sqrt(1-z.^2); %wd es un vector con las frecuencias de amortiguamiento
     
    
+
     %% DEFINO LA VELOCIDAD Y LA CARGA DEL AGUA
-    
-    Twa=5; %% Periodo del oleaje
-    VAmax=3; %% Velocidad máxima del agua
-    Cd=0.7; %% Coeficiente de arrastre
-    RoW=1000; %% Densidad del agua
-    Ainmersa=14*4.176; %% Área a considerar, h sobre agua 14m y diametro 4.176m
-    
-    [VAt,FW]=agua(t,Twa,VAmax,Cd,RoW,Ainmersa,g);
+    FW=agua(t,g);
     
     %% DEFINO LA VELOCIDAD DEL VIENTO Y PARAMETROS DEL VIENTO
     % vel_viento=    ; %% Velocidad del viento [nudos]
@@ -50,32 +43,26 @@ function main;clc;close all; g = false; % graph flag
    
     %% DEFINO PARAMETROS Y FUERZA DE DESBALANCE
 
-    F0Desbalance=1028.93;
-    wRotor=2.572;
-
-    Fd = desbalance(t,F0Desbalance,wRotor,g);
+    Fd = desbalance(t,g);
 
     %% DEFINO LA FUERZA EXTERNA
     P = fuerza_externa(t,x0,FW,Fv,Fd);
 
-
     %% SOLUCIÓN DE LA ECUACIÓN DIFERENCIAL
-    wp = [ 2*pi/Twa 0 0 wRotor] % frecuencia de la carga [rad/s]
-    Po = [ max(FW) 0 Fv(1) F0Desbalance]     % Amplitudes de las fuerzas [N]
     
-    [phi,rho,X] = Descomposicion_Modal_Amortiguado( zitta, M, K,V,wn, x0, dx0, t,P,Po,wp );
+    X = Descomposicion_Modal_Amortiguado(M,V,wn,t,P,wd,zitta,dt );
     trans = Descomposicion_Modal_Amortiguado_Transitoria( M,zitta,V,wn, x0, dx0, t);
 
     res = trans + X;
 
-    phi;
-    rho;
+    res(:,40/dt)
+
     
-    respuesta(t,X,"Respuesta Permanente en el tiempo");
+    % respuesta(t,X,"Respuesta Permanente en el tiempo");
 
-    respuesta(t,trans,"Respuesta Transitoria en el tiempo");
+    % respuesta(t,trans,"Respuesta Transitoria en el tiempo");
 
-    respuesta(t,res,"Respuesta Total en el tiempo");
+    % respuesta(t,res,"Respuesta Total en el tiempo");
     
 
 end
@@ -105,17 +92,22 @@ function vel_power % Power vs Velocity
     title('Power vs Velocity');
 end
 
-function [VAt,FW]=agua(t,Twa,VAmax,Cd,RoW,Ainmersa,graph) %% Función que devuelve la velocidad y la fuerza del agua en función del tiempo	
+function FW=agua(t,graph) %% Función que devuelve la velocidad y la fuerza del agua en función del tiempo	
+    %% DEFINO LA VELOCIDAD Y LA CARGA DEL AGUA
+
+    Twa=5; %% Periodo del oleaje
+    VAmax=2; %% Velocidad máxima del agua
+    Cd=0.7; %% Coeficiente de arrastre
+    RoW=1000; %% Densidad del agua
+    Ainmersa=4*4.176; %% Área a considerar, h sobre agua 14m y diametro 4.176m
     VAt=zeros(1,length(t)); %% Vector agua
     for i=1:length(t)
-
-        tmod=mod(t(i),Twa); %llevo el valor sub i de t a un valor dentro del periodo (entre 0 y Tp)
-        VAt(i)= (tmod>=0).*(tmod<=Twa).*(((VAmax/2)/Twa)*tmod);
-        
+       tmod=mod(t(i),Twa); %llevo el valor sub i de t a un valor dentro del periodo (entre 0 y Tp)
+       VAt(i)= (tmod>=0).*(tmod<=Twa*4/5).*(((VAmax/2)/(Twa*4/5))*tmod+VAmax/2)+(tmod>Twa*4/5).*(tmod<=Twa).*(-VAmax/2*tmod+6);
     end
 
     VAt=VAt+VAmax/2;
-    FW=0.5*RoW*Cd*Ainmersa.*VAt.^2;
+    FW=0.5*RoW*Cd*Ainmersa.*VAt.^2.*(1-exp(-t./5));
 
     if graph
         figure(1);
@@ -129,12 +121,13 @@ function [VAt,FW]=agua(t,Twa,VAmax,Cd,RoW,Ainmersa,graph) %% Función que devuel
     end
 end
 
-function [Fviento]=viento(t,graph) %% Función que devuelve la fuerza del viento en función del tiempo
+function Fviento=viento(t,graph) %% Función que devuelve la fuerza del viento en función del tiempo
     
     % Agregar el calculo de la fuerza del viento en función del viento
-
+    frecviento=1;
+    Aviento=2000;
     for i=1:length(t)
-        Fviento(i)=101213.24; %% Fviento 33kN en todo T
+       Fviento(i,1)=(100000+Aviento*sin(2*pi*frecviento*t(i))).*(1-exp(-t(i)/5));
     end
 
     if graph
@@ -145,7 +138,10 @@ function [Fviento]=viento(t,graph) %% Función que devuelve la fuerza del viento
     end
 end
 
-function [Fdesb]=desbalance(t,F0Desbalance,wRotor,graph) %% Función que devuelve la fuerza de desbalance en función del tiempo
+function Fdesb=desbalance(t,graph) %% Función que devuelve la fuerza de desbalance en función del tiempo
+
+    F0Desbalance=1028.93;
+    wRotor=2.572;
 
     Fdesb=F0Desbalance.*sin(wRotor*t);
 
@@ -158,7 +154,8 @@ function [Fdesb]=desbalance(t,F0Desbalance,wRotor,graph) %% Función que devuelv
 
 end
 
-function [P]=fuerza_externa(t,x0,Fa,Fv,Fd) %% Función que devuelve la fuerza externa en función del tiempo
+function P=fuerza_externa(t,x0,Fa,Fv,Fd) %% Función que devuelve la fuerza externa en función del tiempo
+
 
     P=zeros(length(x0),length(t)); % fuerza externa en el tiempo
     P(1,:) = 0; 
@@ -169,40 +166,25 @@ function [P]=fuerza_externa(t,x0,Fa,Fv,Fd) %% Función que devuelve la fuerza ex
 
 end
 
-function [phi,rho,X] = Descomposicion_Modal_Amortiguado( zitta, M, K,V,w, x0, dx0, t,P,Po,wp )
+function X = Descomposicion_Modal_Amortiguado(M,V,wn, t,P,wd,zitta,dt )
     % ----------------- MATRICES MODALES -----------------------------
 
-    % Mmodal = round(V' * M * V);
-    Kmodal = round(V' * K * V);
-    % Cmodal = 2*zitta.*w.*eye(size(M));
-    Y0 = V' * M * x0;                   %desplazamiento inicial en coordenadas modales
-    dY0 = V' * M * dx0;                 %velocidad inicial en coordenadas modales
-    Pmodal = V' * P;                    %Paso fuerza a coordenadas modales
-    PoModal = V' .* Po;          %Paso las amplitudes de las fuerzas a coordenadas modales
+    Mmodal = round(V' * M * V);
+    Fmodal = V' * P;
 
-    % ----------------- SOLUCION A LA EDO ----------------------------
-
-    % e=exp(1);
-    % wd = w.*sqrt(1-zitta.^2); %frecuencia natural del sistema amortiguado
-    beta = zeros(length(w),1);
-    phi = zeros(length(w),1);
-    rho = zeros(length(w),1);
-    H = zeros(length(w),1);
-
-
-    for i=1:length(w)
-        beta(i)=wp(i)/w(i);
-        H(i) = 1/sqrt( (1-beta(i)^2)^2 + (2*zitta(i)*beta(i))^2 );
-        phi(i)=atan(2*zitta(i)*beta(i)/(1-beta(i)^2));
-        PoModal(i)=max(abs(Pmodal(i,:)));
-        rho(i)=(PoModal(i)/Kmodal(i,i))*H(i);
+    Y = zeros(length(wn), length(t));
+    for i = 1:length(wn)
+        for j = 1:length(t)
+            integral_value = 0;
+            for k = 1:j
+                h = (1/Mmodal(i,i)) * exp(-zitta(i) * wn(i) * (t(j) - t(k))) * sin(wd(i) * (t(j) - t(k)));
+                integral_value = integral_value + h * Fmodal(i,k) * dt;
+            end
+            Y(i,j) = integral_value;
+        end
     end
 
-    Y = zeros(length(w), length(t));
-
-    for i = 1:length(w)    
-        Y(i,:) = rho(i,:).*sin(wp(i)*t-phi(i));
-    end
+    
     %Ahora paso de coordenadas modales a geométricas
     X = V * Y ;
     
@@ -240,10 +222,10 @@ function respuesta(t,X,titulo)
     % Mostramos la respuesta en el tiempo
     figure('Name', titulo);
     hold on;
-    plot(t,X(1,:),"LineWidth",1.5,"Color","b");
-    plot(t,X(2,:),"LineWidth",1.5,"Color","r");
-    plot(t,X(3,:),"LineWidth",1.5,"Color","g");
-    plot(t,X(4,:),"LineWidth",1.5,"Color","y");
+    plot(t,X(1,:),"b");
+    plot(t,X(2,:),"r");
+    plot(t,X(3,:),"g");
+    plot(t,X(4,:),"k");
     hold off;
     ylabel("Desplazamiento [m]");
     xlabel("Tiempo [s]");
@@ -251,3 +233,4 @@ function respuesta(t,X,titulo)
     grid on;
     
 end
+
