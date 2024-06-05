@@ -4,29 +4,24 @@ function main;clc;close all; g = false; % graph flag
 
     %% DEFINICIÓN DE PARÁMETROS DEL SISTEMA
     m1=26067; %% Masa 1
-    m2=129209; %% Masa 2
+    m2=129209; %% Masa 2 
     
-    zitta=[0.015;0.015;0.015;0.015;0.01;0.01];
+    z=0.015; zitta = [z z z z]; % relacion de amortiguamiento
+    x0 = [ 0 ; 0 ; 0 ; 0 ]; % desplazamiento inicial [m]
+    dx0 = [ 0; 0 ; 0 ; 0 ]; % velocidad inicial [m/s]
     
-    k1=2.01e8; %% Rigidez 1
-    k2=9.36e6; %% Rigidez 2
+    k1=2.01e8; %% Rigidez 1 [N/m]
+    k2=9.36e6; %% Rigidez 2 [N/m]
     
-    wdamp=8.3180;
-    mdamp=0.05*(m1+m2);
-    k3=(wdamp^2)/mdamp;
+    M=[m1 0 0 0;
+        0 m1 0 0;
+        0 0 m2 0;
+        0 0 0 m2]; %% Matriz de masa
     
-    
-    M=transpose([m1,m1,m2,m2,mdamp,mdamp]).*eye(6);
-    
-    K=[k1+k2 0 -k2 0 0 0;
-        0 k1+k2 0 -k2 0 0;
-        -k2 0 k2+k3 0 -k3 0;
-         0 -k2  0 k2+k3 0 -k3;
-         0 0 -k3 0 k3 0;
-         0 0 0 -k3 0 k3];%% Matriz de Rigidez
-
-    x0 = [ 0 ; 0 ; 0 ; 0 ; 0 ; 0 ]; % desplazamiento inicial [m]
-    dx0 = [ 0; 0 ; 0 ; 0 ; 0 ; 0 ]; % velocidad inicial [m/s]
+    K=[k1+k2 0 -k2 0;
+        0 k1+k2 0 -k2;
+        -k2 0   k2 0;
+         0 -k2  0 k2]; %% Matriz de Rigidez
     
     dt = 0.005; % time step
     t=0:dt:50; % time vector
@@ -35,7 +30,7 @@ function main;clc;close all; g = false; % graph flag
     [V,lambda]=eig(K,M); %el X que me larga ya esta normalizado de modo q X'*m*X=I
     
     wn=diag(sqrt(lambda)); %wn es un vector con las frecuencias naturales
-    wd=wn.*sqrt(1-zitta.^2); %wd es un vector con las frecuencias de amortiguamiento
+    wd=wn.*sqrt(1-z.^2); %wd es un vector con las frecuencias de amortiguamiento
     
    
 
@@ -54,26 +49,23 @@ function main;clc;close all; g = false; % graph flag
     P = fuerza_externa(t,x0,FW,Fv,Fd);
 
     %% SOLUCIÓN DE LA ECUACIÓN DIFERENCIAL
-
-
-    % x_tmd = Descomposicion_Modal_Amortiguado_maia(M,V,wn,t,P,wd,zitta,dt,x0,dx0);
     
-    X = Descomposicion_Modal_Amortiguado(M,V,wn,t,P,wd,zitta,dt );
+    X2 = Descomposicion_Modal_Amortiguado(M,V,wn,t,P,wd,zitta,dt );
+    % X = Descomposicion_Modal_Amortiguado_maia(M,V,wn,t,P,wd,zitta,dt,x0,dx0);
     trans = Descomposicion_Modal_Amortiguado_Transitoria( M,zitta,V,wn, x0, dx0, t);
 
-    res = trans + X;
-    % res2 = trans + x_tmd;
-
-    res(:,40/dt)
-    % res2(:,40/dt)
+    % res = trans + X;
+    res2 = trans + X2;
+    % res(:,40/dt)
+    res2(:,40/dt)
 
     
     % respuesta(t,X,"Respuesta Permanente en el tiempo");
 
     % respuesta(t,trans,"Respuesta Transitoria en el tiempo");
 
-    respuesta(t,res,"NUESTRO CON TMD");
-    % respuesta(t,res2,"Respuesta Total en el tiempo MAIA");
+    % respuesta(t,res,"Respuesta Total en el tiempo");
+    respuesta(t,res2,"NUESTRO SIN TMD");
     
 
 end
@@ -166,15 +158,39 @@ function Fdesb=desbalance(t,graph) %% Función que devuelve la fuerza de desbala
 end
 
 function P=fuerza_externa(t,x0,Fa,Fv,Fd) %% Función que devuelve la fuerza externa en función del tiempo
-
+    % fv_ar = 100000*sin(8.3180*t);
 
     P=zeros(length(x0),length(t)); % fuerza externa en el tiempo
-    P(1,:) = 0; 
+    % P(1,:) = 0; 
     P(2,:) = Fa;
     P(3,:) = Fd;
     P(4,:) = Fv;
 
 
+end
+
+function X = Descomposicion_Modal_Amortiguado(M,V,wn, t,P,wd,zitta,dt )
+    % ----------------- MATRICES MODALES -----------------------------
+
+    Mmodal = round(V' * M * V);
+    Fmodal = V' * P;
+
+    Y = zeros(length(wn), length(t));
+    for i = 1:length(wn)
+        for j = 1:length(t)
+            integral_value = 0;
+            for k = 1:j
+                h = (1/Mmodal(i,i)) * exp(-zitta(i) * wn(i) * (t(j) - t(k))) * sin(wd(i) * (t(j) - t(k)));
+                integral_value = integral_value + h * Fmodal(i,k) * dt;
+            end
+            Y(i,j) = integral_value;
+        end
+    end
+
+    
+    %Ahora paso de coordenadas modales a geométricas
+    X = V * Y ;
+    
 end
 
 function xt = Descomposicion_Modal_Amortiguado_maia(M,V,w, t,P,wd,zita,dt,x0,v0 )
@@ -212,30 +228,6 @@ function xt = Descomposicion_Modal_Amortiguado_maia(M,V,w, t,P,wd,zita,dt,x0,v0 
 
     % Paso de coordenadas modales a geometricas
     xt = V * yt;
-    
-end
-
-function X = Descomposicion_Modal_Amortiguado(M,V,wn, t,P,wd,zitta,dt )
-    % ----------------- MATRICES MODALES -----------------------------
-
-    Mmodal = round(V' * M * V);
-    Fmodal = V' * P;
-
-    Y = zeros(length(wn), length(t));
-    for i = 1:length(wn)
-        for j = 1:length(t)
-            integral_value = 0;
-            for k = 1:j
-                h = (1/Mmodal(i,i)) * exp(-zitta(i) * wn(i) * (t(j) - t(k))) * sin(wd(i) * (t(j) - t(k)));
-                integral_value = integral_value + h * Fmodal(i,k) * dt;
-            end
-            Y(i,j) = integral_value;
-        end
-    end
-
-    
-    %Ahora paso de coordenadas modales a geométricas
-    X = V * Y ;
     
 end
 
