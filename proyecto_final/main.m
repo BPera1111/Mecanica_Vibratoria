@@ -1,43 +1,11 @@
 function main;clc;close all; g = false; % graph flag
 
-    if g; vel_power() ; end
+    if g; vel_power() ; end %#ok<UNRCH>
 
-    %% DEFINICIÓN DE PARÁMETROS DEL SISTEMA
-    m1=26067; %% Masa 1
-    m2=129209; %% Masa 2
-    
-    zitta=[0.015;0.015;0.015;0.015;0.01;0.01];
-    
-    k1=2.01e8; %% Rigidez 1
-    k2=9.36e6; %% Rigidez 2
-    
-    wdamp=8.3180;
-    mdamp=0.05*(m1+m2);
-    k3=(wdamp^2)/mdamp;
-    
-    
-    M=transpose([m1,m1,m2,m2,mdamp,mdamp]).*eye(6);
-    
-    K=[k1+k2 0 -k2 0 0 0;
-        0 k1+k2 0 -k2 0 0;
-        -k2 0 k2+k3 0 -k3 0;
-         0 -k2  0 k2+k3 0 -k3;
-         0 0 -k3 0 k3 0;
-         0 0 0 -k3 0 k3];%% Matriz de Rigidez
-
-    x0 = [ 0 ; 0 ; 0 ; 0 ; 0 ; 0 ]; % desplazamiento inicial [m]
-    dx0 = [ 0; 0 ; 0 ; 0 ; 0 ; 0 ]; % velocidad inicial [m/s]
     
     dt = 0.005; % time step
     t=0:dt:50; % time vector
     
-    %% ENCUENTRO AUTOVECTORES Y AUTOVALORES
-    [V,lambda]=eig(K,M); %el X que me larga ya esta normalizado de modo q X'*m*X=I
-    
-    wn=diag(sqrt(lambda)); %wn es un vector con las frecuencias naturales
-    wd=wn.*sqrt(1-zitta.^2); %wd es un vector con las frecuencias de amortiguamiento
-    
-   
 
     %% DEFINO LA VELOCIDAD Y LA CARGA DEL AGUA
     FW=agua(t,g);
@@ -50,35 +18,139 @@ function main;clc;close all; g = false; % graph flag
 
     Fd = desbalance(t,g);
 
-    %% DEFINO LA FUERZA EXTERNA
-    P = fuerza_externa(t,x0,FW,Fv,Fd);
 
     %% SOLUCIÓN DE LA ECUACIÓN DIFERENCIAL
-
-
-    % x_tmd = Descomposicion_Modal_Amortiguado_maia(M,V,wn,t,P,wd,zitta,dt,x0,dx0);
     
-    X = Descomposicion_Modal_Amortiguado(M,V,wn,t,P,wd,zitta,dt );
-    trans = Descomposicion_Modal_Amortiguado_Transitoria( M,zitta,V,wn, x0, dx0, t);
+    %% EJE Y CON TMD FORZADO
+    [M_yc, K_yc, wn_yc, wd_yc, zitta_yc, x0_yc, dx0_yc, V_yc] = eje_ind_tmd_forzadas();
+    P_Yc = Fuerza_externa_y(t,x0_yc,Fd);
 
-    res = trans + X;
-    % res2 = trans + x_tmd;
+    y_transitoria_c = Respuesta_Transitoria( M_yc,zitta_yc,V_yc,wn_yc, x0_yc, dx0_yc, t);
+    y_permanente_2c = duhamel_2(M_yc,V_yc,wn_yc,t,P_Yc,wd_yc,zitta_yc,dt,x0_yc,dx0_yc);
+    y_permanente_1c = duhamel_1(M_yc,V_yc,wn_yc,t,P_Yc,wd_yc,zitta_yc,dt);
 
-    res(:,40/dt)
-    % res2(:,40/dt)
+    y_res_2c = y_transitoria_c + y_permanente_2c;
+    y_res_1c = y_transitoria_c + y_permanente_1c;
 
+    % respuesta_1eje_tmd(t,y_res_1c,"EJE Y CON TMD 1");
+    respuesta_1eje_tmd(t,y_res_2c,"EJE Y CON TMD 2");
+
+    % fprintf('y con tmd forzada 1: %f\n', y_res_1c(2,40/dt));
+    % fprintf('y con tmd forzada 2: %f\n', y_res_2c(2,40/dt));
+
+
+    %% EJE Y SIN TMD FORZADO
+    [M_ys, K_ys, wn_ys, wd_ys, zitta_ys, x0_ys, dx0_ys, V_ys] = eje_ind_forzadas();
+    P_Ys = Fuerza_externa_y(t,x0_ys,Fd);
+
+    y_transitoria_s = Respuesta_Transitoria( M_ys,zitta_ys,V_ys,wn_ys, x0_ys, dx0_ys, t);
+    y_permanente_2s = duhamel_2(M_ys,V_ys,wn_ys,t,P_Ys,wd_ys,zitta_ys,dt,x0_ys,dx0_ys);
+    y_permanente_1s = duhamel_1(M_ys,V_ys,wn_ys,t,P_Ys,wd_ys,zitta_ys,dt);
+
+    y_res_2s = y_transitoria_s + y_permanente_2s;
+    y_res_1s = y_transitoria_s + y_permanente_1s;
+
+
+    % respuesta_1eje(t,y_res_1s,"EJE Y SIN TMD 1");
+    respuesta_1eje(t,y_res_2s,"EJE Y SIN TMD 2");
+
+    % fprintf('y sin tmd forzada 1: %f\n',y_res_1s(2,40/dt));
+    % fprintf('y sin tmd forzada 2: %f\n',y_res_2s(2,40/dt));
+
+    %% EJE X CON TMD FORZADO
+    [M_xc, K_xc, wn_xc, wd_xc, zitta_xc, x0_xc, dx0_xc, V_xc] = eje_ind_tmd_forzadas();
+    P_Xc = Fuerza_externa_x(t,x0_xc,FW,Fv);
+
+    x_transitoria_c = Respuesta_Transitoria( M_xc,zitta_xc,V_xc,wn_xc, x0_xc, dx0_xc, t);
+    x_permanente_2c = duhamel_2(M_xc,V_xc,wn_xc,t,P_Xc,wd_xc,zitta_xc,dt,x0_xc,dx0_xc);
+    x_permanente_1c = duhamel_1(M_xc,V_xc,wn_xc,t,P_Xc,wd_xc,zitta_xc,dt);
+
+    x_res_2c = x_transitoria_c + x_permanente_2c;
+    x_res_1c = x_transitoria_c + x_permanente_1c;
     
-    % respuesta(t,X,"Respuesta Permanente en el tiempo");
+    % respuesta_1eje_tmd(t,x_res_1c,"EJE X CON TMD 1");
+    respuesta_1eje_tmd(t,x_res_2c,"EJE X CON TMD 2");
 
-    % respuesta(t,trans,"Respuesta Transitoria en el tiempo");
+    % fprintf('x con tmd forzada 1: %f\n', x_res_1c(1,40/dt));
+    % fprintf('x con tmd forzada 2: %f\n', x_res_2c(1,40/dt));
 
-    respuesta(t,res,"NUESTRO CON TMD");
-    % respuesta(t,res2,"Respuesta Total en el tiempo MAIA");
+    %% EJE X SIN TMD FORZADO
+    [M_xs, K_xs, wn_xs, wd_xs, zitta_xs, x0_xs, dx0_xs, V_xs] = eje_ind_forzadas();
+    P_Xs = Fuerza_externa_x(t,x0_xs,FW,Fv);
+
+    x_transitoria_s = Respuesta_Transitoria( M_xs,zitta_xs,V_xs,wn_xs, x0_xs, dx0_xs, t);
+    x_permanente_2s = duhamel_2(M_xs,V_xs,wn_xs,t,P_Xs,wd_xs,zitta_xs,dt,x0_xs,dx0_xs);
+    x_permanente_1s = duhamel_1(M_xs,V_xs,wn_xs,t,P_Xs,wd_xs,zitta_xs,dt);
+
+    x_res_2s = x_transitoria_s + x_permanente_2s;
+    x_res_1s = x_transitoria_s + x_permanente_1s;
+
+    % respuesta_1eje(t,x_res_1s,"EJE X SIN TMD 1");
+    respuesta_1eje(t,x_res_2s,"EJE X SIN TMD 2");
+
+    % fprintf('x sin tmd forzada 1: %f\n', x_res_1s(1,40/dt));
+    % fprintf('x sin tmd forzada 2: %f\n', x_res_2s(1,40/dt));
+
+    % %% EJE X E Y CON TMD FORZADO
+    % [Mc, Kc, wnc, wdc, zittac, x0c, dx0c, Vc] = TMD_6x6();
+    % Pc = fuerza_externa(t,x0c,FW,Fv,Fd);
+
+    % transitoria_c = Respuesta_Transitoria( Mc,zittac,Vc,wnc, x0c, dx0c, t);
+    % permanente_2c = duhamel_2(Mc,Vc,wnc,t,Pc,wdc,zittac,dt,x0c,dx0c);
+    % permanente_1c = duhamel_1(Mc,Vc,wnc,t,Pc,wdc,zittac,dt);
+
+    % res_2c = transitoria_c + permanente_2c;
+    % res_1c = transitoria_c + permanente_1c;
+
+    % % respuesta_tmd(t,res_1c,"EJE X E Y CON TMD 1");
+    % respuesta_tmd(t,res_2c,"EJE X E Y CON TMD 2");
+
+    % % fprintf('x e y con tmd forzada 1: %f\n', res_1c(1,40/dt));
+    % % fprintf('x e y con tmd forzada 2: %f\n', res_2c(1,40/dt));
+
+    % %% EJE X E Y SIN TMD FORZADO
+    % [Ms, Ks, wns, wds, zittas, x0s, dx0s, Vs] = SIN_TMD_6x6();
+    % Ps = fuerza_externa(t,x0s,FW,Fv,Fd);
+
+    % transitoria_s = Respuesta_Transitoria( Ms,zittas,Vs,wns, x0s, dx0s, t);
+    % permanente_2s = duhamel_2(Ms,Vs,wns,t,Ps,wds,zittas,dt,x0s,dx0s);
+    % permanente_1s = duhamel_1(Ms,Vs,wns,t,Ps,wds,zittas,dt);
+
+    % res_2s = transitoria_s + permanente_2s;
+    % res_1s = transitoria_s + permanente_1s;
+
+    % % respuesta(t,res_1s,"EJE X E Y SIN TMD 1");
+    % respuesta(t,res_2s,"EJE X E Y SIN TMD 2");
+
+    % fprintf('x e y sin tmd forzada 1: %f\n', res_1s(1,40/dt));
+    % fprintf('x e y sin tmd forzada 2: %f\n', res_2s(1,40/dt));
+
+    fprintf('Tabla de resultados:\n');
+    fprintf('----------------------------------------\n');
+    % fprintf('Eje Y con TMD forzada 1: %f\n', y_res_1c(2,40/dt));
+    fprintf('Eje Y con TMD forzada 2: %f\n', y_res_2c(2,40/dt));
+    % fprintf('Eje Y sin TMD forzada 1: %f\n', y_res_1s(2,40/dt));
+    fprintf('Eje Y sin TMD forzada 2: %f\n', y_res_2s(2,40/dt));
+    reduction_percentage = (y_res_2c(2,40/dt) - y_res_2s(2,40/dt)) / y_res_2c(2,40/dt) * 100;
+    fprintf('Porcentaje de reducción al aplicar el TMD: %.2f%%\n', reduction_percentage);
+    fprintf('----------------------------------------\n');
+    % fprintf('Eje X con TMD forzada 1: %f\n', x_res_1c(2,40/dt));
+    fprintf('Eje X con TMD forzada 2: %f\n', x_res_2c(2,40/dt));
+    % fprintf('Eje X sin TMD forzada 1: %f\n', x_res_1s(2,40/dt));
+    fprintf('Eje X sin TMD forzada 2: %f\n', x_res_2s(2,40/dt));
+    reduction_percentage = (x_res_2c(2,40/dt) - x_res_2s(2,40/dt)) / x_res_2c(2,40/dt) * 100;
+    fprintf('Porcentaje de reducción al aplicar el TMD: %.2f%%\n', reduction_percentage);
     
+    fprintf('----------------------------------------\n');
+    % fprintf('Eje X e Y con TMD forzada 1: %f\n', res_1c(4,40/dt));
+    % fprintf('Eje X e Y con TMD forzada 2: %f\n', res_2c(4,40/dt));
+    % % fprintf('Eje X e Y sin TMD forzada 1: %f\n', res_1s(4,40/dt));
+    % fprintf('Eje X e Y sin TMD forzada 2: %f\n', res_2s(4,40/dt));
+    % fprintf('----------------------------------------\n');
 
 end
 
-function vel_power % Power vs Velocity
+function vel_power %#ok<DEFNU> % Power vs Velocity
     vel = 0:0.1:27; % velocity vector
     power = zeros(1, length(vel)); % power vector
     v_cin = 3;
@@ -135,10 +207,10 @@ end
 function Fviento=viento(t,graph) %% Función que devuelve la fuerza del viento en función del tiempo
     
     % Agregar el calculo de la fuerza del viento en función del viento
-    frecviento=1;
-    Aviento=2000;
+    % frecviento=1;
+    % Aviento=2000;
     for i=1:length(t)
-       Fviento(i,1)=(100000+Aviento*sin(2*pi*frecviento*t(i))).*(1-exp(-t(i)/5));
+       Fviento(i,1)=(100000);%+Aviento*sin(2*pi*frecviento*t(i))).*(1-exp(-t(i)/5));
     end
 
     if graph
@@ -151,7 +223,7 @@ end
 
 function Fdesb=desbalance(t,graph) %% Función que devuelve la fuerza de desbalance en función del tiempo
 
-    F0Desbalance=1028.93;
+    F0Desbalance=1028.93*3;
     wRotor=2.572;
 
     Fdesb=F0Desbalance.*sin(wRotor*t);
@@ -166,7 +238,7 @@ function Fdesb=desbalance(t,graph) %% Función que devuelve la fuerza de desbala
 end
 
 function P=fuerza_externa(t,x0,Fa,Fv,Fd) %% Función que devuelve la fuerza externa en función del tiempo
-
+    % fv_ar = 100000*sin(8.3180*t);
 
     P=zeros(length(x0),length(t)); % fuerza externa en el tiempo
     P(1,:) = 0; 
@@ -177,7 +249,18 @@ function P=fuerza_externa(t,x0,Fa,Fv,Fd) %% Función que devuelve la fuerza exte
 
 end
 
-function xt = Descomposicion_Modal_Amortiguado_maia(M,V,w, t,P,wd,zita,dt,x0,v0 )
+function Py=Fuerza_externa_y(t,x0,Fd) %% Función que devuelve la fuerza externa en función del tiempo
+    Py=zeros(length(x0),length(t)); % fuerza externa en el tiempo
+    Py(2,:) = Fd; 
+end
+
+function Px=Fuerza_externa_x(t,x0,Fa,Fv) %% Función que devuelve la fuerza externa en función del tiempo
+    Px=zeros(length(x0),length(t)); % fuerza externa en el tiempo
+    Px(1,:) = Fa;
+    Px(2,:) = Fv;
+end
+
+function xt = duhamel_2(M,V,w, t,P,wd,zita,dt,x0,v0 )
     % ----------------- MATRICES MODALES -----------------------------
     M_modal = V' * M * V;
     % K_modal = V' * K * V;
@@ -211,11 +294,11 @@ function xt = Descomposicion_Modal_Amortiguado_maia(M,V,w, t,P,wd,zita,dt,x0,v0 
     end
 
     % Paso de coordenadas modales a geometricas
-    xt = V * yt;
+    xt = V * yt .*10;
     
 end
 
-function X = Descomposicion_Modal_Amortiguado(M,V,wn, t,P,wd,zitta,dt )
+function X = duhamel_1(M,V,wn, t,P,wd,zitta,dt )
     % ----------------- MATRICES MODALES -----------------------------
 
     Mmodal = round(V' * M * V);
@@ -239,7 +322,7 @@ function X = Descomposicion_Modal_Amortiguado(M,V,wn, t,P,wd,zitta,dt )
     
 end
 
-function x = Descomposicion_Modal_Amortiguado_Transitoria( M,zitta,V,wn, x0, dx0, t)
+function x = Respuesta_Transitoria( M,zitta,V,wn, x0, dx0, t)
 
     % Paso de coordenadas del espacio fisico al espacio modal
     y0 = V'*M*x0; % desplazamiento inicial en el espacio modal
@@ -281,4 +364,180 @@ function respuesta(t,X,titulo)
     legend("x1(t)","x2(t)","x3(t)","x4(t)");
     grid on;
     
+end
+
+function respuesta_tmd(t,X,titulo)
+    % Mostramos la respuesta en el tiempo
+    figure('Name', titulo);
+    hold on;
+    plot(t,X(1,:),"b");
+    plot(t,X(2,:),"r");
+    plot(t,X(3,:),"g");
+    plot(t,X(4,:),"k");
+    plot(t,X(5,:),"m--");
+    plot(t,X(6,:),"c--");
+    hold off;
+    ylabel("Desplazamiento [m]");
+    xlabel("Tiempo [s]");
+    legend("x1(t)","x2(t)","x3(t)","x4(t), tmdx(t), tmdy(t)");
+    grid on;
+    
+end
+
+function respuesta_1eje_tmd(t,X,titulo)
+    % Mostramos la respuesta en el tiempo
+    figure('Name', titulo);
+    hold on;
+    plot(t,X(1,:),"r");
+    plot(t,X(2,:),"g");
+    plot(t,X(3,:),"b");
+    hold off;
+    ylabel("Desplazamiento [m]");
+    xlabel("Tiempo [s]");
+    legend("x1(t)","x2(t)","x3(t)");
+    grid on;
+    
+end
+
+function respuesta_1eje(t,X,titulo)
+    % Mostramos la respuesta en el tiempo
+    figure('Name', titulo);
+    hold on;
+    plot(t,X(1,:),"r");
+    plot(t,X(2,:),"g");
+    hold off;
+    ylabel("Desplazamiento [m]");
+    xlabel("Tiempo [s]");
+    legend("x1(t)","x2(t)");
+    grid on;
+    
+end
+
+function [M,K,wn,wd,z,xINI,dxINI,V]=eje_ind_tmd_forzadas()
+    %% DEFINICIÓN DE PARÁMETROS DEL SISTEMA
+    %% DEFINICIÓN DE PARÁMETROS DEL SISTEMA
+    m1=62000; %% Masa 1
+    m2=93000; %% Masa 2
+    m3=0.03*(m1+m2); %% Masa TMD
+
+    z=[0.015;0.015;0.05];
+
+    k1=2e8; %% Rigidez 1
+    k2=9e6; %% Rigidez 2
+    k3=(9.4)^2*m3; %% Rigidez 3
+
+    M= [m1 0 0;
+        0 m2 0;
+        0 0 m3]; %% Matriz de masa
+
+    K=[k1+k2 -k2 0;
+        -k2   k2 -k3;
+        0 -k3 k3]; %% Matriz de Rigidez
+
+    xINI=[0;0;0];
+    dxINI=[0;0;0];
+
+    %% ENCUENTRO AUTOVECTORES Y AUTOVALORES
+    [V,lambda]=eig(K,M); %el X que me larga ya esta normalizado de modo q X'*m*X=I
+
+    wn=diag(sqrt(lambda));
+    wd=wn.*sqrt(1-z.^2);
+
+end
+
+function [M,K,wn,wd,z,xINI,dxINI,V]=eje_ind_forzadas()
+    %% DEFINICIÓN DE PARÁMETROS DEL SISTEMA
+    %% DEFINICIÓN DE PARÁMETROS DEL SISTEMA
+    m1=62000; %% Masa 1
+    m2=93000; %% Masa 2
+    %m3=0.05*(m1+m2); %% Masa TMD
+
+    z=[0.015;0.015];
+
+    k1=2e8; %% Rigidez 1
+    k2=9e6; %% Rigidez 2
+    %k3=(20)^2*m3; %% Rigidez 3
+
+    M= [m1 0;
+        0 m2]; %% Matriz de masa
+
+    K=[k1+k2 -k2;
+        -k2   k2]; %% Matriz de Rigidez
+
+
+    xINI=[0;0];
+    dxINI=[0;0];
+
+    %% ENCUENTRO AUTOVECTORES Y AUTOVALORES
+    [V,lambda]=eig(K,M); %el X que me larga ya esta normalizado de modo q X'*m*X=I
+
+    wn=diag(sqrt(lambda));
+    wd=wn.*sqrt(1-z.^2);
+
+end
+
+function [M,K,wn,wd,zitta,x0,dx0,V]=TMD_6x6()
+    %% DEFINICIÓN DE PARÁMETROS DEL SISTEMA
+    m1=62000; %% Masa 1
+    m2=93000; %% Masa 2
+    
+    zitta=[0.015;0.015;0.015;0.015;0.01;0.01];
+    
+    k1=2e8; %% Rigidez 1
+    k2=9e6; %% Rigidez 2
+    
+    wdamp=8.3180;
+    mdamp=0.05*(m1+m2);
+    k3=(wdamp^2)/mdamp;
+    
+    M=transpose([m1,m1,m2,m2,mdamp,mdamp]).*eye(6);
+    
+    K=[k1+k2 0 -k2 0 0 0;
+        0 k1+k2 0 -k2 0 0;
+        -k2 0 k2+k3 0 -k3 0;
+         0 -k2  0 k2+k3 0 -k3;
+         0 0 -k3 0 k3 0;
+         0 0 0 -k3 0 k3];%% Matriz de Rigidez
+
+    x0 = [ 0 ; 0 ; 0 ; 0 ; 0 ; 0 ]; % desplazamiento inicial [m]
+    dx0 = [ 0; 0 ; 0 ; 0 ; 0 ; 0 ]; % velocidad inicial [m/s]
+    
+    
+    %% ENCUENTRO AUTOVECTORES Y AUTOVALORES
+    [V,lambda]=eig(K,M); %el X que me larga ya esta normalizado de modo q X'*m*X=I
+    
+    wn=diag(sqrt(lambda)); %wn es un vector con las frecuencias naturales
+    wd=wn.*sqrt(1-zitta.^2); %wd es un vector con las frecuencias de amortiguamiento
+
+end
+
+function [M,K,wn,wd,zitta,x0,dx0,V]=SIN_TMD_6x6()
+    %% DEFINICIÓN DE PARÁMETROS DEL SISTEMA
+    m1=62000; %% Masa 1
+    m2=93000; %% Masa 2
+    
+    z=0.015; zitta = [z z z z]; % relacion de amortiguamiento
+    x0 = [ 0 ; 0 ; 0 ; 0 ]; % desplazamiento inicial [m]
+    dx0 = [ 0; 0 ; 0 ; 0 ]; % velocidad inicial [m/s]
+    
+    k1=2e8; %% Rigidez 1
+    k2=9e6; %% Rigidez 2
+    
+    M=[m1 0 0 0;
+        0 m1 0 0;
+        0 0 m2 0;
+        0 0 0 m2]; %% Matriz de masa
+    
+    K=[k1+k2 0 -k2 0;
+        0 k1+k2 0 -k2;
+        -k2 0   k2 0;
+         0 -k2  0 k2]; %% Matriz de Rigidez
+   
+    
+    %% ENCUENTRO AUTOVECTORES Y AUTOVALORES
+    [V,lambda]=eig(K,M); %el X que me larga ya esta normalizado de modo q X'*m*X=I
+    
+    wn=diag(sqrt(lambda)); %wn es un vector con las frecuencias naturales
+    wd=wn.*sqrt(1-z.^2); %wd es un vector con las frecuencias de amortiguamiento
+
 end
