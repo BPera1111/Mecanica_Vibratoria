@@ -1,4 +1,4 @@
-function main;clc;close all; g = false; % graph flag
+function main;clc;close all; g = true; % graph flag
 
     if g; vel_power() ; end %#ok<UNRCH>
 
@@ -26,11 +26,11 @@ function main;clc;close all; g = false; % graph flag
     P_Yc = Fuerza_externa_y(t,x0_yc,Fd);
 
     y_transitoria_c = Respuesta_Transitoria( M_yc,zitta_yc,V_yc,wn_yc, x0_yc, dx0_yc, t);
-    y_permanente_2c = duhamel_2(M_yc,V_yc,wn_yc,t,P_Yc,wd_yc,zitta_yc,dt,x0_yc,dx0_yc);
-    y_permanente_1c = duhamel_1(M_yc,V_yc,wn_yc,t,P_Yc,wd_yc,zitta_yc,dt);
+    y_permanente_2c = Fact_Magnificacion_Dinam(M_yc,K_yc,wn_yc,wd_yc,P_Yc,V_yc,t);
+    % y_permanente_1c = duhamel_1(M_yc,V_yc,wn_yc,t,P_Yc,wd_yc,zitta_yc,dt);
 
     y_res_2c = y_transitoria_c + y_permanente_2c;
-    y_res_1c = y_transitoria_c + y_permanente_1c;
+    % y_res_1c = y_transitoria_c + y_permanente_1c;
 
     % respuesta_1eje_tmd(t,y_res_1c,"EJE Y CON TMD 1");
     respuesta_1eje_tmd(t,y_res_2c,"EJE Y CON TMD 2");
@@ -44,11 +44,11 @@ function main;clc;close all; g = false; % graph flag
     P_Ys = Fuerza_externa_y(t,x0_ys,Fd);
 
     y_transitoria_s = Respuesta_Transitoria( M_ys,zitta_ys,V_ys,wn_ys, x0_ys, dx0_ys, t);
-    y_permanente_2s = duhamel_2(M_ys,V_ys,wn_ys,t,P_Ys,wd_ys,zitta_ys,dt,x0_ys,dx0_ys);
-    y_permanente_1s = duhamel_1(M_ys,V_ys,wn_ys,t,P_Ys,wd_ys,zitta_ys,dt);
+    y_permanente_2s = Fact_Magnificacion_Dinam(M_ys,K_ys,wn_ys,wd_ys,P_Ys,V_ys,t);
+    % y_permanente_1s = duhamel_1(M_ys,V_ys,wn_ys,t,P_Ys,wd_ys,zitta_ys,dt);
 
     y_res_2s = y_transitoria_s + y_permanente_2s;
-    y_res_1s = y_transitoria_s + y_permanente_1s;
+    % y_res_1s = y_transitoria_s + y_permanente_1s;
 
 
     % respuesta_1eje(t,y_res_1s,"EJE Y SIN TMD 1");
@@ -62,11 +62,11 @@ function main;clc;close all; g = false; % graph flag
     P_Xc = Fuerza_externa_x(t,x0_xc,FW,Fv);
 
     x_transitoria_c = Respuesta_Transitoria( M_xc,zitta_xc,V_xc,wn_xc, x0_xc, dx0_xc, t);
-    x_permanente_2c = duhamel_2(M_xc,V_xc,wn_xc,t,P_Xc,wd_xc,zitta_xc,dt,x0_xc,dx0_xc);
-    x_permanente_1c = duhamel_1(M_xc,V_xc,wn_xc,t,P_Xc,wd_xc,zitta_xc,dt);
+    x_permanente_2c = Fact_Magnificacion_Dinam(M_xc,K_xc,wn_xc,wd_xc,P_Xc,V_xc,t);
+    % x_permanente_1c = duhamel_1(M_xc,V_xc,wn_xc,t,P_Xc,wd_xc,zitta_xc,dt);
 
     x_res_2c = x_transitoria_c + x_permanente_2c;
-    x_res_1c = x_transitoria_c + x_permanente_1c;
+    % x_res_1c = x_transitoria_c + x_permanente_1c;
     
     % respuesta_1eje_tmd(t,x_res_1c,"EJE X CON TMD 1");
     respuesta_1eje_tmd(t,x_res_2c,"EJE X CON TMD 2");
@@ -79,11 +79,12 @@ function main;clc;close all; g = false; % graph flag
     P_Xs = Fuerza_externa_x(t,x0_xs,FW,Fv);
 
     x_transitoria_s = Respuesta_Transitoria( M_xs,zitta_xs,V_xs,wn_xs, x0_xs, dx0_xs, t);
-    x_permanente_2s = duhamel_2(M_xs,V_xs,wn_xs,t,P_Xs,wd_xs,zitta_xs,dt,x0_xs,dx0_xs);
-    x_permanente_1s = duhamel_1(M_xs,V_xs,wn_xs,t,P_Xs,wd_xs,zitta_xs,dt);
+    x_permanente_2s = Fact_Magnificacion_Dinam(M_xs,K_xs,wn_xs,wd_xs,P_Xs,V_xs,t);
+    % (M,K,wn,wd,P,X,t)
+    % x_permanente_1s = duhamel_1(M_xs,V_xs,wn_xs,t,P_Xs,wd_xs,zitta_xs,dt);
 
     x_res_2s = x_transitoria_s + x_permanente_2s;
-    x_res_1s = x_transitoria_s + x_permanente_1s;
+    % x_res_1s = x_transitoria_s + x_permanente_1s;
 
     % respuesta_1eje(t,x_res_1s,"EJE X SIN TMD 1");
     respuesta_1eje(t,x_res_2s,"EJE X SIN TMD 2");
@@ -91,36 +92,36 @@ function main;clc;close all; g = false; % graph flag
     % fprintf('x sin tmd forzada 1: %f\n', x_res_1s(1,40/dt));
     % fprintf('x sin tmd forzada 2: %f\n', x_res_2s(1,40/dt));
 
-    % %% EJE X E Y CON TMD FORZADO
-    % [Mc, Kc, wnc, wdc, zittac, x0c, dx0c, Vc] = TMD_6x6();
-    % Pc = fuerza_externa(t,x0c,FW,Fv,Fd);
+    %% EJE X E Y CON TMD FORZADO
+    [Mc, Kc, wnc, wdc, zittac, x0c, dx0c, Vc] = TMD_6x6();
+    Pc = fuerza_externa(t,x0c,FW,Fv,Fd);
 
-    % transitoria_c = Respuesta_Transitoria( Mc,zittac,Vc,wnc, x0c, dx0c, t);
-    % permanente_2c = duhamel_2(Mc,Vc,wnc,t,Pc,wdc,zittac,dt,x0c,dx0c);
+    transitoria_c = Respuesta_Transitoria( Mc,zittac,Vc,wnc, x0c, dx0c, t);
+    permanente_2c = Fact_Magnificacion_Dinam(Mc,Kc,wnc,wdc,Pc,Vc,t);
     % permanente_1c = duhamel_1(Mc,Vc,wnc,t,Pc,wdc,zittac,dt);
 
-    % res_2c = transitoria_c + permanente_2c;
+    res_2c = transitoria_c + permanente_2c;
     % res_1c = transitoria_c + permanente_1c;
 
-    % % respuesta_tmd(t,res_1c,"EJE X E Y CON TMD 1");
-    % respuesta_tmd(t,res_2c,"EJE X E Y CON TMD 2");
+    % respuesta_tmd(t,res_1c,"EJE X E Y CON TMD 1");
+    respuesta_tmd(t,res_2c,"EJE X E Y CON TMD 2");
 
-    % % fprintf('x e y con tmd forzada 1: %f\n', res_1c(1,40/dt));
-    % % fprintf('x e y con tmd forzada 2: %f\n', res_2c(1,40/dt));
+    % fprintf('x e y con tmd forzada 1: %f\n', res_1c(1,40/dt));
+    % fprintf('x e y con tmd forzada 2: %f\n', res_2c(1,40/dt));
 
-    % %% EJE X E Y SIN TMD FORZADO
-    % [Ms, Ks, wns, wds, zittas, x0s, dx0s, Vs] = SIN_TMD_6x6();
-    % Ps = fuerza_externa(t,x0s,FW,Fv,Fd);
+    %% EJE X E Y SIN TMD FORZADO
+    [Ms, Ks, wns, wds, zittas, x0s, dx0s, Vs] = SIN_TMD_6x6();
+    Ps = fuerza_externa(t,x0s,FW,Fv,Fd);
 
-    % transitoria_s = Respuesta_Transitoria( Ms,zittas,Vs,wns, x0s, dx0s, t);
-    % permanente_2s = duhamel_2(Ms,Vs,wns,t,Ps,wds,zittas,dt,x0s,dx0s);
+    transitoria_s = Respuesta_Transitoria( Ms,zittas,Vs,wns, x0s, dx0s, t);
+    permanente_2s = Fact_Magnificacion_Dinam(Ms,Ks,wns,wds,Ps,Vs,t);
     % permanente_1s = duhamel_1(Ms,Vs,wns,t,Ps,wds,zittas,dt);
 
-    % res_2s = transitoria_s + permanente_2s;
+    res_2s = transitoria_s + permanente_2s;
     % res_1s = transitoria_s + permanente_1s;
 
-    % % respuesta(t,res_1s,"EJE X E Y SIN TMD 1");
-    % respuesta(t,res_2s,"EJE X E Y SIN TMD 2");
+    % respuesta(t,res_1s,"EJE X E Y SIN TMD 1");
+    respuesta(t,res_2s,"EJE X E Y SIN TMD 2");
 
     % fprintf('x e y sin tmd forzada 1: %f\n', res_1s(1,40/dt));
     % fprintf('x e y sin tmd forzada 2: %f\n', res_2s(1,40/dt));
@@ -131,21 +132,25 @@ function main;clc;close all; g = false; % graph flag
     fprintf('Eje Y con TMD forzada 2: %f\n', y_res_2c(2,40/dt));
     % fprintf('Eje Y sin TMD forzada 1: %f\n', y_res_1s(2,40/dt));
     fprintf('Eje Y sin TMD forzada 2: %f\n', y_res_2s(2,40/dt));
-    reduction_percentage = (y_res_2c(2,40/dt) - y_res_2s(2,40/dt)) / y_res_2c(2,40/dt) * 100;
+    reduction_percentage = (y_res_2c(2,40/dt) / y_res_2s(2,40/dt)) * 100;
     fprintf('Porcentaje de reducción al aplicar el TMD: %.2f%%\n', reduction_percentage);
     fprintf('----------------------------------------\n');
     % fprintf('Eje X con TMD forzada 1: %f\n', x_res_1c(2,40/dt));
     fprintf('Eje X con TMD forzada 2: %f\n', x_res_2c(2,40/dt));
     % fprintf('Eje X sin TMD forzada 1: %f\n', x_res_1s(2,40/dt));
     fprintf('Eje X sin TMD forzada 2: %f\n', x_res_2s(2,40/dt));
-    reduction_percentage = (x_res_2c(2,40/dt) - x_res_2s(2,40/dt)) / x_res_2c(2,40/dt) * 100;
+    reduction_percentage = (x_res_2c(2,40/dt) / x_res_2s(2,40/dt)) * 100;
     fprintf('Porcentaje de reducción al aplicar el TMD: %.2f%%\n', reduction_percentage);
     
     fprintf('----------------------------------------\n');
     % fprintf('Eje X e Y con TMD forzada 1: %f\n', res_1c(4,40/dt));
-    % fprintf('Eje X e Y con TMD forzada 2: %f\n', res_2c(4,40/dt));
+    fprintf('Eje X e Y con TMD forzada 2: %f\n', res_2c(4,40/dt));
     % % fprintf('Eje X e Y sin TMD forzada 1: %f\n', res_1s(4,40/dt));
-    % fprintf('Eje X e Y sin TMD forzada 2: %f\n', res_2s(4,40/dt));
+    fprintf('Eje X e Y sin TMD forzada 2: %f\n', res_2s(4,40/dt));
+    reduction_percentage_x4 = (res_2c(4,40/dt) / res_2s(4,40/dt)) * 100;
+    fprintf('Porcentaje de reducción al aplicar el TMD Viento Agua: %.2f%%\n', reduction_percentage_x4);
+    reduction_percentage_x3 = (res_2c(3,40/dt) / res_2s(3,40/dt)) * 100;
+    fprintf('Porcentaje de reducción al aplicar el TMD Desbalance: %.2f%%\n', reduction_percentage_x3);
     % fprintf('----------------------------------------\n');
 
 end
@@ -322,6 +327,25 @@ function X = duhamel_1(M,V,wn, t,P,wd,zitta,dt )
     
 end
 
+function X = Fact_Magnificacion_Dinam(M,K,wn,wd,P,X,t)
+    % Transformar fuerzas a coordenadas modales
+    Mmodal=round(X'*M*X); %M modal
+    Kmodal=round(X'*K*X); %K modal
+    Fmodal = X' * P;
+
+    % Respuesta permanente modal
+    Y_perm = zeros(length(wn), length(t));
+    for i = 1:length(wn)
+        for j = 1:length(t)
+            Y_perm(i,j) = (1/(Kmodal(i,i) - Mmodal(i,i) * wd(i)^2)) * Fmodal(i,j);
+        end
+    end
+
+    % Paso de coordenadas modales a geométricas
+    X = X * Y_perm;
+
+end
+
 function x = Respuesta_Transitoria( M,zitta,V,wn, x0, dx0, t)
 
     % Paso de coordenadas del espacio fisico al espacio modal
@@ -379,7 +403,7 @@ function respuesta_tmd(t,X,titulo)
     hold off;
     ylabel("Desplazamiento [m]");
     xlabel("Tiempo [s]");
-    legend("x1(t)","x2(t)","x3(t)","x4(t), tmdx(t), tmdy(t)");
+    legend("x1(t)","x2(t)","x3(t)","x4(t)", "tmdx(t)", "tmdy(t)");
     grid on;
     
 end
@@ -394,7 +418,7 @@ function respuesta_1eje_tmd(t,X,titulo)
     hold off;
     ylabel("Desplazamiento [m]");
     xlabel("Tiempo [s]");
-    legend("x1(t)","x2(t)","x3(t)");
+    legend("x1(t)","x2(t)","TMD(t)");
     grid on;
     
 end
