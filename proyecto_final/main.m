@@ -62,7 +62,7 @@ function main;clc;close all; g = true; % graph flag
     P_Xc = Fuerza_externa_x(t,x0_xc,FW,Fv);
 
     x_transitoria_c = Respuesta_Transitoria( M_xc,zitta_xc,V_xc,wn_xc, x0_xc, dx0_xc, t);
-    x_permanente_2c = Fact_Magnificacion_Dinam(M_xc,K_xc,wn_xc,wd_xc,P_Xc,V_xc,t);
+    x_permanente_2c = Transformada_De_Fourier(M_xc,K_xc,t,P_Xc,dt,V_xc,wn_xc,zitta_xc);
     % x_permanente_1c = duhamel_1(M_xc,V_xc,wn_xc,t,P_Xc,wd_xc,zitta_xc,dt);
 
     x_res_2c = x_transitoria_c + x_permanente_2c;
@@ -79,8 +79,7 @@ function main;clc;close all; g = true; % graph flag
     P_Xs = Fuerza_externa_x(t,x0_xs,FW,Fv);
 
     x_transitoria_s = Respuesta_Transitoria( M_xs,zitta_xs,V_xs,wn_xs, x0_xs, dx0_xs, t);
-    x_permanente_2s = Fact_Magnificacion_Dinam(M_xs,K_xs,wn_xs,wd_xs,P_Xs,V_xs,t);
-    % (M,K,wn,wd,P,X,t)
+    x_permanente_2s = Transformada_De_Fourier(M_xs,K_xs,t,P_Xs,dt,V_xs,wn_xs,zitta_xs);
     % x_permanente_1s = duhamel_1(M_xs,V_xs,wn_xs,t,P_Xs,wd_xs,zitta_xs,dt);
 
     x_res_2s = x_transitoria_s + x_permanente_2s;
@@ -121,7 +120,7 @@ function main;clc;close all; g = true; % graph flag
     % res_1s = transitoria_s + permanente_1s;
 
     % respuesta(t,res_1s,"EJE X E Y SIN TMD 1");
-    respuesta(t,res_2s,"EJE X E Y SIN TMD 2");
+    % respuesta(t,res_2s,"EJE X E Y SIN TMD 2");
 
     % fprintf('x e y sin tmd forzada 1: %f\n', res_1s(1,40/dt));
     % fprintf('x e y sin tmd forzada 2: %f\n', res_2s(1,40/dt));
@@ -129,28 +128,28 @@ function main;clc;close all; g = true; % graph flag
     fprintf('Tabla de resultados:\n');
     fprintf('----------------------------------------\n');
     % fprintf('Eje Y con TMD forzada 1: %f\n', y_res_1c(2,40/dt));
-    fprintf('Eje Y con TMD forzada 2: %f\n', y_res_2c(2,40/dt));
+    fprintf('Eje Y con TMD forzada 2: %f\n', y_res_2c(2,39/dt));
     % fprintf('Eje Y sin TMD forzada 1: %f\n', y_res_1s(2,40/dt));
-    fprintf('Eje Y sin TMD forzada 2: %f\n', y_res_2s(2,40/dt));
-    reduction_percentage = (y_res_2c(2,40/dt) / y_res_2s(2,40/dt)) * 100;
+    fprintf('Eje Y sin TMD forzada 2: %f\n', y_res_2s(2,39/dt));
+    reduction_percentage = (y_res_2c(2,39/dt) / y_res_2s(2,39/dt)) * 100;
     fprintf('Porcentaje de reducción al aplicar el TMD: %.2f%%\n', reduction_percentage);
     fprintf('----------------------------------------\n');
     % fprintf('Eje X con TMD forzada 1: %f\n', x_res_1c(2,40/dt));
-    fprintf('Eje X con TMD forzada 2: %f\n', x_res_2c(2,40/dt));
+    fprintf('Eje X con TMD forzada 2: %f\n', x_res_2c(2,39/dt));
     % fprintf('Eje X sin TMD forzada 1: %f\n', x_res_1s(2,40/dt));
-    fprintf('Eje X sin TMD forzada 2: %f\n', x_res_2s(2,40/dt));
-    reduction_percentage = (x_res_2c(2,40/dt) / x_res_2s(2,40/dt)) * 100;
+    fprintf('Eje X sin TMD forzada 2: %f\n', x_res_2s(2,39/dt));
+    reduction_percentage = (x_res_2c(2,39/dt) / x_res_2s(2,39/dt)) * 100;
     fprintf('Porcentaje de reducción al aplicar el TMD: %.2f%%\n', reduction_percentage);
     
     fprintf('----------------------------------------\n');
-    % fprintf('Eje X e Y con TMD forzada 1: %f\n', res_1c(4,40/dt));
-    fprintf('Eje X e Y con TMD forzada 2: %f\n', res_2c(4,40/dt));
-    % % fprintf('Eje X e Y sin TMD forzada 1: %f\n', res_1s(4,40/dt));
-    fprintf('Eje X e Y sin TMD forzada 2: %f\n', res_2s(4,40/dt));
-    reduction_percentage_x4 = (res_2c(4,40/dt) / res_2s(4,40/dt)) * 100;
-    fprintf('Porcentaje de reducción al aplicar el TMD Viento Agua: %.2f%%\n', reduction_percentage_x4);
-    reduction_percentage_x3 = (res_2c(3,40/dt) / res_2s(3,40/dt)) * 100;
-    fprintf('Porcentaje de reducción al aplicar el TMD Desbalance: %.2f%%\n', reduction_percentage_x3);
+    % % fprintf('Eje X e Y con TMD forzada 1: %f\n', res_1c(4,40/dt));
+    % fprintf('Eje X e Y con TMD forzada 2: %f\n', res_2c(4,40/dt));
+    % % % fprintf('Eje X e Y sin TMD forzada 1: %f\n', res_1s(4,40/dt));
+    % fprintf('Eje X e Y sin TMD forzada 2: %f\n', res_2s(4,40/dt));
+    % reduction_percentage_x4 = (res_2c(4,40/dt) / res_2s(4,40/dt)) * 100;
+    % fprintf('Porcentaje de reducción al aplicar el TMD Viento Agua: %.2f%%\n', reduction_percentage_x4);
+    % reduction_percentage_x3 = (res_2c(3,40/dt) / res_2s(3,40/dt)) * 100;
+    % fprintf('Porcentaje de reducción al aplicar el TMD Desbalance: %.2f%%\n', reduction_percentage_x3);
     % fprintf('----------------------------------------\n');
 
 end
@@ -184,6 +183,7 @@ function FW=agua(t,graph) %% Función que devuelve la velocidad y la fuerza del 
     %% DEFINO LA VELOCIDAD Y LA CARGA DEL AGUA
 
     Twa=5; %% Periodo del oleaje
+    wpa = 2*pi/Twa; % Frecuencia de la carga externa
     VAmax=2; %% Velocidad máxima del agua
     Cd=0.7; %% Coeficiente de arrastre
     RoW=1000; %% Densidad del agua
@@ -194,8 +194,10 @@ function FW=agua(t,graph) %% Función que devuelve la velocidad y la fuerza del 
        VAt(i)= (tmod>=0).*(tmod<=Twa*4/5).*(((VAmax/2)/(Twa*4/5))*tmod+VAmax/2)+(tmod>Twa*4/5).*(tmod<=Twa).*(-VAmax/2*tmod+6);
     end
 
+
     VAt=VAt+VAmax/2;
     FW=0.5*RoW*Cd*Ainmersa.*VAt.^2.*(1-exp(-t./5));
+    
 
     if graph
         figure(1);
@@ -214,8 +216,42 @@ function Fviento=viento(t,graph) %% Función que devuelve la fuerza del viento e
     % Agregar el calculo de la fuerza del viento en función del viento
     % frecviento=1;
     % Aviento=2000;
-    for i=1:length(t)
-       Fviento(i,1)=(100000);%+Aviento*sin(2*pi*frecviento*t(i))).*(1-exp(-t(i)/5));
+    % for i=1:length(t)
+    %    Fviento(i,1)=(100000);%+Aviento*sin(2*pi*frecviento*t(i))).*(1-exp(-t(i)/5));
+    % end
+    Cd=0.7;
+    P_aire=1.203;
+    D=4.176;
+    A_mastil=(84-14)*D;
+    V_viento=20.58;
+
+    Fv_mastil=(1/2)*Cd*P_aire*A_mastil*V_viento^2; 
+
+    Pot=3075*10^3;
+    TSR=7;
+    R=56;
+    wRotor=TSR*V_viento/R; %%velocidad en m/s
+
+    Fv_aspas=(Pot/wRotor)/(R/2); 
+
+
+    Aviento=Fv_mastil + Fv_aspas;
+    frecViento=0.5;
+
+    %Fviento = 100000 * ones(1, length(t));
+
+    %Agrego variacion al viento
+    for i=1:2500
+        Fviento(i)=100000+Aviento*sin(2*pi*frecViento*t(i))+Aviento/3*sin(3*2*pi*frecViento*t(i))+Aviento/4*cos(4.1*2*pi*frecViento*t(i))+Aviento/8.2*sin(8.34*2*pi*frecViento*t(i)); %#ok<AGROW>
+    end
+    for i=2501:5000
+        Fviento(i)=100000+Aviento/1.2*sin(1.1*2*pi*frecViento*t(i))+Aviento/3.23*sin(4.21*2*pi*frecViento*t(i))+Aviento/5.23*cos(6.23*2*pi*frecViento*t(i))+Aviento/8.26*sin(5.32*2*pi*frecViento*t(i));
+    end
+    for i=5001:7500
+        Fviento(i)=100000+Aviento/1.77*cos(1.1*2*pi*frecViento*t(i))+Aviento/3.91*sin(2.21*2*pi*frecViento*t(i))+Aviento/3.678*cos(7.1*2*pi*frecViento*t(i))+Aviento/9.4*sin(4.375*2*pi*frecViento*t(i));
+    end
+    for i=7501:10001
+        Fviento(i)=100000+Aviento/0.992*cos(1.632*2*pi*frecViento*t(i))+Aviento/5.13*sin(4.581*2*pi*frecViento*t(i))+Aviento/6.8*sin(7.1*2*pi*frecViento*t(i))+Aviento/9.4*sin(4.65*2*pi*frecViento*t(i));
     end
 
     if graph
@@ -343,6 +379,35 @@ function X = Fact_Magnificacion_Dinam(M,K,wn,wd,P,X,t)
 
     % Paso de coordenadas modales a geométricas
     X = X * Y_perm;
+
+end
+
+function X = Transformada_De_Fourier(M,K,t,P,dt,V,wn,z)
+
+    Mmodal = round(V' * M * V); % M modal
+    Kmodal = round(V' * K * V); % K modal
+    Cmodal = 2*z.*wn.*eye(size(Mmodal)); % C modal
+
+    % Transformar fuerzas a coordenadas modales
+    Fmodal = V' * P;
+
+    % Frecuencias de Fourier
+    omega = 2 * pi * (0:(length(t)-1)) / (length(t) * dt);
+
+    % Función de transferencia H(iw)
+    H = zeros(size(Mmodal, 1), length(omega));
+    for i = 1:length(omega)
+        H(:, i) = diag(((-omega(i)^2 * Mmodal + 1i * omega(i) * Cmodal + Kmodal) \ eye(size(Mmodal))));
+    end
+
+    % Respuesta en frecuencia
+    Y_freq = H .* fft(Fmodal, [], 2);
+
+    % Transformar de vuelta al dominio del tiempo
+    Y_perm = ifft(Y_freq, [], 2, 'symmetric');
+
+    % Transformar respuesta permanente a coordenadas físicas
+    X = V * Y_perm;
 
 end
 
