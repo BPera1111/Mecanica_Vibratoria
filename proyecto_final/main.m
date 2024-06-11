@@ -6,7 +6,7 @@ function main;clc;close all; g = true; % graph flag
     dt = 0.005; % time step
     t=0:dt:50; % time vector
     
-    %% DEFINICIÓN DE PARÁMETROS DEL SISTEMA
+    %% DEFINICIÓN DE PARÁMETROS DEL SISTEMA CON TMD
     m1=62000; %% Masa 1
     m2=93000; %% Masa 2
     m3=0.03*(m1+m2); %% Masa TMD
@@ -30,6 +30,76 @@ function main;clc;close all; g = true; % graph flag
 
     %% ENCUENTRO AUTOVECTORES Y AUTOVALORES
     [V,lambda]=eig(K,M); %el X que me larga ya esta normalizado de modo q X'*m*X=I
+        
+    %% GRAFICAR MODOS DE VIBRACIÓN
+    for i=1:3
+        V(:,i)=V(:,i)/V(3,i);
+    end
+    V
+    num_modes = size(V, 2);
+    heights = [0; 1; 2; 3]; % Altura de la estructura en metros
+
+    figure;
+    for i = 1:num_modes
+        mode_shape = [0; V(:, i)]; % Agregar un cero inicial para la base de la estructura
+        subplot(1, num_modes, i);
+        plot(mode_shape, heights, '-b', 'LineWidth', 1.5);
+        title(['Modo de Vibración ', num2str(i)]);
+        xlabel('Amplitud');
+        ylabel('Grados de Libertad');
+        grid on;
+        set(gca, 'YDir', 'normal'); % Asegurarse de que el eje Y vaya de abajo hacia arriba
+        yticks(heights);
+    end
+
+    sgtitle('Modos de Vibración del Sistema Con TMD');
+
+    %% DEFINICIÓN DE PARÁMETROS DEL SISTEMA SIN TMD
+    m1=62000; %% Masa 1
+    m2=93000; %% Masa 2
+    %m3=0.05*(m1+m2); %% Masa TMD
+
+    z=[0.015;0.015];
+
+    k1=2e8; %% Rigidez 1
+    k2=9e6; %% Rigidez 2
+    %k3=(20)^2*m3; %% Rigidez 3
+
+    M= [m1 0;
+        0 m2]; %% Matriz de masa
+
+    K=[k1+k2 -k2;
+        -k2   k2]; %% Matriz de Rigidez
+
+
+    xINI=[0;0];
+    dxINI=[0;0];
+
+    %% ENCUENTRO AUTOVECTORES Y AUTOVALORES
+    [V,lambda]=eig(K,M); %el X que me larga ya esta normalizado de modo q X'*m*X=I
+
+    %% GRAFICAR MODOS DE VIBRACIÓN
+    for i=1:2
+        V(:,i)=V(:,i)/V(2,i);
+    end
+    V
+    num_modes = size(V, 2);
+    heights = [0; 1; 2]; % Altura de la estructura en metros
+
+    figure;
+    for i = 1:num_modes
+        mode_shape = [0; V(:, i)]; % Agregar un cero inicial para la base de la estructura
+        subplot(1, num_modes, i);
+        plot(mode_shape, heights, '-b', 'LineWidth', 1.5);
+        title(['Modo de Vibración ', num2str(i)]);
+        xlabel('Amplitud');
+        ylabel('Grados de Libertad');
+        grid on;
+        set(gca, 'YDir', 'normal'); % Asegurarse de que el eje Y vaya de abajo hacia arriba
+        yticks(heights);
+    end
+
+    sgtitle('Modos de Vibración del Sistema Sin TMD');
 
     wn=diag(sqrt(lambda));
     wd=wn.*sqrt(1-z.^2);
@@ -121,11 +191,14 @@ function Fviento=viento(t,V_viento,graph) %% Función que devuelve la fuerza del
     Fv_aspas=(1/2)*Cd*P_aire*(0.4*pi*56^2)*V_viento^2;
     
     Avientob=Fv_mastil + Fv_aspas;
-
-
-    Aviento=20000;
-    % Avientob=100000;
-    frecViento=0.5;
+    random = false;
+    if random
+        Aviento=20000*rand();
+        frecViento=0.5*rand();        
+    else
+        Aviento=20000;
+        frecViento=0.5;
+    end
 
     %Fviento = 100000 * ones(1, length(t));
 
@@ -472,7 +545,7 @@ function ejecutar(FW,Fv,Fd,t,dt)
     xlabel("Tiempo [s]");
     legend("x2(t) CON TMD","x2(t) SIN TMD");
     grid on;
-    ylim([min(x_res_2s(2,:)) max(x_res_2s(2,:))]);
+    % ylim([min(x_res_2s(2,:)) max(x_res_2s(2,:))]);
     figure('Name', 'EJE Y2 con TMD vs EJE Y2 sin TMD');
     hold on;
     plot(t,y_res_2c(2,:),"r");
@@ -482,7 +555,7 @@ function ejecutar(FW,Fv,Fd,t,dt)
     xlabel("Tiempo [s]");
     legend("y2(t) CON TMD","y2(t) SIN TMD");
     grid on;
-    ylim([min(x_res_2s(2,:)) max(x_res_2s(2,:))]);
+    % ylim([min(x_res_2s(2,:)) max(x_res_2s(2,:))]);
     figure('Name', 'EJE x1 con TMD vs EJE x1 sin TMD');
     hold on;
     % plot(t,(x_res_2c(2,:)*0.6+(-mean(x_res_2c(2,:)*0.6)+mean(x_res_2s(2,:)))),"r");
@@ -493,7 +566,7 @@ function ejecutar(FW,Fv,Fd,t,dt)
     xlabel("Tiempo [s]");
     legend("x1(t) CON TMD","x1(t) SIN TMD");
     grid on;
-    ylim([min(x_res_2s(2,:)) max(x_res_2s(2,:))]);
+    % ylim([min(x_res_2s(2,:)) max(x_res_2s(2,:))]);
     figure('Name', 'EJE Y1 con TMD vs EJE Y1 sin TMD');
     hold on;
     plot(t,y_res_2c(1,:),"r");
@@ -504,7 +577,7 @@ function ejecutar(FW,Fv,Fd,t,dt)
     legend("y1(t) CON TMD","y1(t) SIN TMD");
     grid on;
 
-    ylim([min(x_res_2s(2,:)) max(x_res_2s(2,:))]);
+    % ylim([min(x_res_2s(2,:)) max(x_res_2s(2,:))]);
     % ylim([-0.5 0.5]);
 
 end
