@@ -4,7 +4,7 @@ function main;clc;close all; g = true; % graph flag
 
     
     dt = 0.005; % time step
-    t=0:dt:40; % time vector
+    t=0:dt:50; % time vector
     
     %% DEFINICIÓN DE PARÁMETROS DEL SISTEMA
     m1=62000; %% Masa 1
@@ -39,8 +39,8 @@ function main;clc;close all; g = true; % graph flag
     FW=agua(t,g);
     
     %% DEFINO LA VELOCIDAD DEL VIENTO Y PARAMETROS DEL VIENTO
-    vel_viento=8.33;    ; %% Velocidad del viento [m/s]
-    Fv = viento(t,dt,vel_viento,g);
+    vel_viento=7.64;    ; %% Velocidad del viento [m/s]
+    Fv = viento(t,vel_viento,g);
    
     %% DEFINO PARAMETROS Y FUERZA DE DESBALANCE
 
@@ -109,58 +109,39 @@ function FW=agua(t,graph) %% Función que devuelve la velocidad y la fuerza del 
     end
 end
 
-function Fviento=viento(t,dt,V_viento,graph) %% Función que devuelve la fuerza del viento en función del tiempo
+function Fviento=viento(t,V_viento,graph) %% Función que devuelve la fuerza del viento en función del tiempo
     
-    % Agregar el calculo de la fuerza del viento en función del viento
-    % frecviento=1;
-    % Aviento=2000;
-    % for i=1:length(t)
-    %    Fviento(i,1)=(100000);%+Aviento*sin(2*pi*frecviento*t(i))).*(1-exp(-t(i)/5));
-    % end
     Cd=0.7;
     P_aire=1.203;
     D=4.176;
     A_mastil=(84-14)*D;
-    R=56;
-
-    Fv_mastil=(1/2)*Cd*P_aire*A_mastil*V_viento^2; 
-
-    TSR=7;
-    Fv_aspas=(1/2)*0.7*0.4*(pi*R^2)*1.203*V_viento^2;
-
-    % Fviento=Fv_mastil + Fv_aspas 
+    
+    Fv_mastil=(1/2)*Cd*P_aire*A_mastil*V_viento^2;
+    
+    Fv_aspas=(1/2)*Cd*P_aire*(0.4*pi*56^2)*V_viento^2;
+    
+    Avientob=Fv_mastil + Fv_aspas;
 
 
-    Avientob=Fv_mastil + Fv_aspas
-
-    Aviento=2000;%*rand();
-    frecViento=0.5;%rand();
+    Aviento=20000;
+    % Avientob=100000;
+    frecViento=0.5;
 
     %Fviento = 100000 * ones(1, length(t));
 
-    % Agrego variacion al viento
-    cuarto = round(length(t)/4);
-    for i=1:cuarto
+    %Agrego variacion al viento
+    for i=1:2500
         Fviento(i)=Avientob+Aviento*sin(2*pi*frecViento*t(i))+Aviento/3*sin(3*2*pi*frecViento*t(i))+Aviento/4*cos(4.1*2*pi*frecViento*t(i))+Aviento/8.2*sin(8.34*2*pi*frecViento*t(i)); %#ok<AGROW>
     end
-    for i=cuarto+1:cuarto*2
+    for i=2501:5000
         Fviento(i)=Avientob+Aviento/1.2*sin(1.1*2*pi*frecViento*t(i))+Aviento/3.23*sin(4.21*2*pi*frecViento*t(i))+Aviento/5.23*cos(6.23*2*pi*frecViento*t(i))+Aviento/8.26*sin(5.32*2*pi*frecViento*t(i));
     end
-    for i=cuarto*2+1:cuarto*3
+    for i=5001:7500
         Fviento(i)=Avientob+Aviento/1.77*cos(1.1*2*pi*frecViento*t(i))+Aviento/3.91*sin(2.21*2*pi*frecViento*t(i))+Aviento/3.678*cos(7.1*2*pi*frecViento*t(i))+Aviento/9.4*sin(4.375*2*pi*frecViento*t(i));
     end
-    for i=cuarto*3+1:length(t)
+    for i=7501:10001
         Fviento(i)=Avientob+Aviento/0.992*cos(1.632*2*pi*frecViento*t(i))+Aviento/5.13*sin(4.581*2*pi*frecViento*t(i))+Aviento/6.8*sin(7.1*2*pi*frecViento*t(i))+Aviento/9.4*sin(4.65*2*pi*frecViento*t(i));
     end
-
-    % for i=1:length(t)
-    %     if mod(i, round(20/dt)) == 0
-    %         frecViento =0.5*rand();
-    %     elseif i==1
-    %         frecViento =0.5*rand();
-    %     end
-    %     Fviento(i)=Avientob+Aviento*sin(2*pi*frecViento*t(i))+Aviento/3*sin(3*2*pi*frecViento*t(i))+Aviento/4*cos(6.1*2*pi*frecViento*t(i))+Aviento/8.2*sin(7.9*2*pi*frecViento*t(i)); %#ok<AGROW>
-    % end
 
     if graph
         figure(1);
@@ -432,8 +413,8 @@ function ejecutar(FW,Fv,Fd,t,dt)
     respuesta_1eje(t,x_res_2s,"EJE X SIN TMD 2");
 
 
-    t1 = 2;
-    t2 = 18;
+    t1 = 2
+    t2 = 18
     fprintf('Tabla de resultados:\n');
     fprintf('----------------------------------------\n');
     Amp_TMDy = amplitud(y_res_2c(2,:),t1,t2,dt);
@@ -444,7 +425,7 @@ function ejecutar(FW,Fv,Fd,t,dt)
     fprintf('Porcentaje de reducción al aplicar el TMD: %.2f%%\n', reduction_percentage);
     fprintf('----------------------------------------\n');
 
-    Amp_TMDx = amplitud((x_res_2c(2,:)*0.6+(-mean(x_res_2c(2,:)*0.6)+mean(x_res_2s(2,:)))),t1,t2,dt);
+    Amp_TMDx = amplitud((x_res_2c(2,:)),t1,t2,dt);
     Amp_SIN_TMDx = amplitud(x_res_2s(2,:),t1,t2,dt);
     fprintf('Eje X con TMD forzada 2: %f\n', Amp_TMDx);
     fprintf('Eje X sin TMD forzada 2: %f\n', Amp_SIN_TMDx);
@@ -452,10 +433,39 @@ function ejecutar(FW,Fv,Fd,t,dt)
     fprintf('Porcentaje de reducción al aplicar el TMD: %.2f%%\n', reduction_percentage);
     fprintf('----------------------------------------\n');
 
+    t1 = 30
+    t2 = 50
+    fprintf('Tabla de resultados:\n');
+    fprintf('----------------------------------------\n');
+    Amp_TMDy = amplitud(y_res_2c(2,:),t1,t2,dt);
+    Amp_SIN_TMDy = amplitud(y_res_2s(2,:),t1,t2,dt);
+    fprintf('Eje Y con TMD forzada 2: %f\n', Amp_TMDy);
+    fprintf('Eje Y sin TMD forzada 2: %f\n', Amp_SIN_TMDy);    
+    reduction_percentage = (Amp_TMDy / Amp_SIN_TMDy) * 100;
+    fprintf('Porcentaje de reducción al aplicar el TMD: %.2f%%\n', reduction_percentage);
+    fprintf('----------------------------------------\n');
+
+    Amp_TMDx = amplitud((x_res_2c(2,:)),t1,t2,dt);
+    Amp_SIN_TMDx = amplitud(x_res_2s(2,:),t1,t2,dt);
+    fprintf('Eje X con TMD forzada 2: %f\n', Amp_TMDx);
+    fprintf('Eje X sin TMD forzada 2: %f\n', Amp_SIN_TMDx);
+    reduction_percentage = (Amp_TMDx / Amp_SIN_TMDx) * 100;
+    fprintf('Porcentaje de reducción al aplicar el TMD: %.2f%%\n', reduction_percentage);
+    fprintf('----------------------------------------\n');
+    % % fprintf('Eje X e Y con TMD forzada 1: %f\n', res_1c(4,40/dt));
+    % fprintf('Eje X e Y con TMD forzada 2: %f\n', res_2c(4,40/dt));
+    % % % fprintf('Eje X e Y sin TMD forzada 1: %f\n', res_1s(4,40/dt));
+    % fprintf('Eje X e Y sin TMD forzada 2: %f\n', res_2s(4,40/dt));
+    % reduction_percentage_x4 = (res_2c(4,40/dt) / res_2s(4,40/dt)) * 100;
+    % fprintf('Porcentaje de reducción al aplicar el TMD Viento Agua: %.2f%%\n', reduction_percentage_x4);
+    % reduction_percentage_x3 = (res_2c(3,40/dt) / res_2s(3,40/dt)) * 100;
+    % fprintf('Porcentaje de reducción al aplicar el TMD Desbalance: %.2f%%\n', reduction_percentage_x3);
+    % fprintf('----------------------------------------\n');
+
     figure('Name', 'EJE x con TMD vs EJE x sin TMD');
     hold on;
-    plot(t,(x_res_2c(2,:)*0.6+(-mean(x_res_2c(2,:)*0.6)+mean(x_res_2s(2,:)))),"r");
-    % plot(t,x_res_2c(2,:),"r");
+    % plot(t,(x_res_2c(2,:)*0.6+(-mean(x_res_2c(2,:)*0.6)+mean(x_res_2s(2,:)))),"r");
+    plot(t,x_res_2c(2,:),"r");
     plot(t,x_res_2s(2,:),"g");
     hold off;
     ylabel("Desplazamiento [m]");
