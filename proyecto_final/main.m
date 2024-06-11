@@ -413,8 +413,8 @@ function ejecutar(FW,Fv,Fd,t,dt)
     respuesta_1eje(t,x_res_2s,"EJE X SIN TMD 2");
 
 
-    t1 = 2
-    t2 = 18
+    t1 = 2;
+    t2 = 18;
     fprintf('Tabla de resultados:\n');
     fprintf('----------------------------------------\n');
     Amp_TMDy = amplitud(y_res_2c(2,:),t1,t2,dt);
@@ -433,8 +433,8 @@ function ejecutar(FW,Fv,Fd,t,dt)
     fprintf('Porcentaje de reducción al aplicar el TMD: %.2f%%\n', reduction_percentage);
     fprintf('----------------------------------------\n');
 
-    t1 = 30
-    t2 = 50
+    t1 = 30;
+    t2 = 50;
     fprintf('Tabla de resultados:\n');
     fprintf('----------------------------------------\n');
     Amp_TMDy = amplitud(y_res_2c(2,:),t1,t2,dt);
@@ -462,7 +462,7 @@ function ejecutar(FW,Fv,Fd,t,dt)
     % fprintf('Porcentaje de reducción al aplicar el TMD Desbalance: %.2f%%\n', reduction_percentage_x3);
     % fprintf('----------------------------------------\n');
 
-    figure('Name', 'EJE x con TMD vs EJE x sin TMD');
+    figure('Name', 'EJE x2 con TMD vs EJE x2 sin TMD');
     hold on;
     % plot(t,(x_res_2c(2,:)*0.6+(-mean(x_res_2c(2,:)*0.6)+mean(x_res_2s(2,:)))),"r");
     plot(t,x_res_2c(2,:),"r");
@@ -470,16 +470,41 @@ function ejecutar(FW,Fv,Fd,t,dt)
     hold off;
     ylabel("Desplazamiento [m]");
     xlabel("Tiempo [s]");
-    legend("CON TMD","SIN TMD");
+    legend("x2(t) CON TMD","x2(t) SIN TMD");
     grid on;
-    figure('Name', 'EJE Y con TMD vs EJE Y sin TMD');
+    ylim([min(x_res_2s(2,:)) max(x_res_2s(2,:))]);
+    figure('Name', 'EJE Y2 con TMD vs EJE Y2 sin TMD');
     hold on;
     plot(t,y_res_2c(2,:),"r");
     plot(t,y_res_2s(2,:),"g");
     hold off;
     ylabel("Desplazamiento [m]");
     xlabel("Tiempo [s]");
-    legend("CON TMD","SIN TMD");
+    legend("y2(t) CON TMD","y2(t) SIN TMD");
     grid on;
+    ylim([min(x_res_2s(2,:)) max(x_res_2s(2,:))]);
+    figure('Name', 'EJE x1 con TMD vs EJE x1 sin TMD');
+    hold on;
+    % plot(t,(x_res_2c(2,:)*0.6+(-mean(x_res_2c(2,:)*0.6)+mean(x_res_2s(2,:)))),"r");
+    plot(t,x_res_2c(1,:),"r");
+    plot(t,x_res_2s(1,:),"g");
+    hold off;
+    ylabel("Desplazamiento [m]");
+    xlabel("Tiempo [s]");
+    legend("x1(t) CON TMD","x1(t) SIN TMD");
+    grid on;
+    ylim([min(x_res_2s(2,:)) max(x_res_2s(2,:))]);
+    figure('Name', 'EJE Y1 con TMD vs EJE Y1 sin TMD');
+    hold on;
+    plot(t,y_res_2c(1,:),"r");
+    plot(t,y_res_2s(1,:),"g");
+    hold off;
+    ylabel("Desplazamiento [m]");
+    xlabel("Tiempo [s]");
+    legend("y1(t) CON TMD","y1(t) SIN TMD");
+    grid on;
+
+    ylim([min(x_res_2s(2,:)) max(x_res_2s(2,:))]);
+    % ylim([-0.5 0.5]);
 
 end
